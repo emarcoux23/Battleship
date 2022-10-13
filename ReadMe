@@ -1,0 +1,26 @@
+Instructions to setup the battleship project
+
+1. VISUAL STUDIO CODE
+    - Download: https://code.visualstudio.com/download
+    - Install the PlatformIO extension
+    - Install the Python extension
+
+2. PYTHON
+    - Download: https://www.python.org/downloads/
+    - Open the terminal and execute this: pip instal pyserial
+
+3. GITHUB REPOSITORY
+    - Clone the repository Battleship on your computer
+    - The project has a folder named Arduino and a folder named Python
+
+4. BATTLESHIP/PYTHON
+    - It contains everything related to Python
+    - Python/Battleship contains the python scripts of the project
+    - To run the scripts click the play button on the top right
+
+5. BATTLESHIP/ARDUINO
+    - It contains everything related to Arduino
+    - Arduino/Battleship is a PlatformIO project
+    - You have to open the project from the PlatformIO home screen
+    - To build the project click the check mark on the bottom left
+    
