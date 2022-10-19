@@ -1,53 +1,32 @@
-import serial.tools.list_ports
+import json
+import time
+from multiprocessing import connection
+import serial
+from Ports import *
 
-BAUDRATE = 9600
+selectedPort = "COM" + str(ChoosePort())
+connection = serial.Serial(baudrate = 9600, port = selectedPort)
 
-ports = serial.tools.list_ports.comports()
-serialInst = serial.Serial()
-
-portsList = []
-
-print("\n********** Port list **********")
-for port in ports:
-    portsList.append(str(port))
-    print(str(port))
-print("********** Port list **********\n")
-
-noPortSelected = True
-while noPortSelected:
-    portSelected = input("Select Port: COM")
-
-    for i in range(0, len(portsList)):
-        if portsList[i].startswith("COM" + str(portSelected)):
-            print("Port COM" + portSelected + " was successfully selected!\n")
-            noPortSelected = False
-    if noPortSelected:
-        print("Port COM" + portSelected + " was not found, please try again\n")
-
-serialInst.baudrate = BAUDRATE
-serialInst.port = "COM" + str(portSelected)
-serialInst.open()
+try:
+    connection.open()
+    print("Opening connection with port " + selectedPort)
+except:
+    print("Connection with port " + selectedPort + " already opened, proceeding\n")
 
 while True:
-    if serialInst.in_waiting:
-        packet = serialInst.readline()
-        print(packet.decode('utf').strip('\n'))
-    command = input("Arduino Command (ON/OFF) or EXIT: ")
-    serialInst.write(command.encode('utf-8'))
-    if command == "EXIT":
-        exit()
 
-"""
-while True:
-    if serialInst.in_waiting:
-        packet = serialInst.readline()
-        print(packet.decode('utf').strip('\n'))
-"""
+    # SEND MESSAGE
+    dict_json = {
+        "yolo": 2.3,
+        "bruh": 5,
+        }
+    y = json.dumps(dict_json)
+    connection.write(y.encode('utf-8'))
 
-"""
-while True:
-    command = input("Arduino Command (ON/OFF) or EXIT: ")
-    serialInst.write(command.encode('utf-8'))
-    if command == "EXIT":
-        exit()
-"""
+    # READ MESSAGE
+    data = connection.readline().decode("utf-8")
+    try:
+        dict_json = json.loads(data)
+        print(dict_json)
+    except json.JSONDecodeError as error:
+        print("JSON:", error)
