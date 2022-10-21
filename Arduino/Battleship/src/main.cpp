@@ -1,41 +1,99 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "setup.h"
+#include "led.h"
 
-#define BAUDRATE 9600
+#define BAUDRATE   9600
 
-bool trigger       = false;
+Setup set;
+Led led;
 
-bool shouldSend    = false;
-bool shouldRead    = false;
-float yolo         = 0;
+enum SEQUENCE_STEP {STEP_STALL,
+                    STEP_BLUE,
+                    STEP_GREEN, 
+                    STEP_RED, 
+                    STEP_WHITE};
+SEQUENCE_STEP STEP;   
+
+bool shouldSend = false;
+bool shouldRead = false;
+
+bool ask_user_input = false;
+int msg_step = STEP_STALL;
+String msg_blue = "";
+
+unsigned long temps = 0;
 
 void sendMsg();
 void readMsg();
 
 void setup() 
 {
-  Setup setup;
-  setup.Baudrate(BAUDRATE);
-  pinMode(LED_BUILTIN, OUTPUT);
+  set.Baudrate(BAUDRATE);
+  STEP = STEP_STALL;
 }
 
 void loop() 
 {
-  shouldRead = true;
-  shouldSend = true;
+  switch (STEP)
+  {
+
+  case STEP_STALL:
+    led.Off();
+    ask_user_input = true;
+    shouldRead = true;
+    shouldSend = true;
+    temps = millis();
+    break;
+
+  case STEP_BLUE:
+    led.Blue();
+    ask_user_input = false;
+    shouldRead = false;
+    shouldSend = true;
+
+    msg_blue = "Allo ici bleu";
+
+    if (millis() - temps > 2000)
+      STEP = STEP_STALL;
+    break;
+
+  case STEP_GREEN:
+    led.Green();
+    ask_user_input = false;
+    shouldRead = false;
+    shouldSend = true;
+
+    msg_blue = "Allo ici vert";
+
+    if (millis() - temps > 2000)
+      STEP = STEP_RED;
+    break;
+
+  case STEP_RED:
+    led.Red();
+    ask_user_input = true;
+    shouldRead = true;
+    shouldSend = true;
+    break;
+
+  case STEP_WHITE:
+    led.White();
+    ask_user_input = true;
+    shouldRead = true;
+    shouldSend = true;
+    break;
+  
+  default:
+    break;
+  }
 
   if (shouldSend == true)
     sendMsg();
   if (shouldRead == true)
     readMsg();
 
-  if (yolo == 2.3)
-    digitalWrite(LED_BUILTIN, HIGH);
-  else
-    digitalWrite(LED_BUILTIN, LOW);
-
-  delay(100);
+  //delay(100);
 }
 
 void sendMsg()
@@ -43,8 +101,8 @@ void sendMsg()
   StaticJsonDocument<500> doc;
 
   doc["time_ms"] = millis();
-  doc["time_sec"] = millis()/1000;
-  doc["time_min"] = millis()/1000/60;
+  doc["msg_blue"] = msg_blue;
+  doc["ask_user_input"] = ask_user_input;
 
   serializeJson(doc, Serial);
   Serial.println();
@@ -57,7 +115,7 @@ void readMsg()
   StaticJsonDocument<500> doc;
   JsonVariant parse_msg;
   DeserializationError error = deserializeJson(doc, Serial);
-  shouldRead = false;
+  //shouldRead = false;
 
   if (error) 
   {
@@ -66,9 +124,10 @@ void readMsg()
     return;
   }
   
-  parse_msg = doc["yolo"];
+  parse_msg = doc["msg_step"];
   if (!parse_msg.isNull())
   {
-     yolo = doc["yolo"].as<float>();
+     msg_step = doc["msg_step"].as<int>();
+     STEP = static_cast<SEQUENCE_STEP>(msg_step);
   }
 }

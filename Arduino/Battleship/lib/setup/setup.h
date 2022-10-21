@@ -13,8 +13,7 @@ class Setup
     /* Destructeur */
     ~Setup();
 
-    /* Fonction pour initialiser l'electroaimant*/
-    void Setup::Baudrate(int baudrate);
+    void Baudrate(int baudrate);
 
 };
 #endif
